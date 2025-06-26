@@ -1,3 +1,5 @@
+package main;
+import com.tciss.*;
 import java.util.Scanner;
 /**
  * Main entry point for the Trading Card Inventory System
@@ -13,15 +15,14 @@ public class Main {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        TradingCardInventorySystem tcis = new TradingCardInventorySystem();
-        BinderManager binderManager = new BinderManager();
-        DeckManager deckManager = new DeckManager();
         Scanner scanner = new Scanner(System.in);
+        Input input = new Input(scanner);
+        TradingCardInventorySystem tcis = new TradingCardInventorySystem(input);
         boolean running = true;
 
         while (running) {
             tcis.displayMainMenu();
-            int choice = tcis.getIntInput("Enter your choice: ");
+            int choice = input.getIntInput("Enter your choice: ");
 
             if (choice == 1) {
                 System.out.println("\n=== Add Card ===");
@@ -43,16 +44,16 @@ public class Main {
                 System.out.print("Press Enter to continue...");
                 scanner.nextLine();
             } else if (choice == 5) {
-               if (tcis.getBinderCount() == 0) {
-                    binderManager.createBinder(tcis);
+               if (tcis.getBinderManager().getBinderCount() == 0) {
+                    tcis.getBinderManager().createBinder();
                 } else {
-                    binderManager.manageBinders(tcis);
+                    tcis.getBinderManager().manageBinders(tcis);
                 }
             } else if (choice == 6) {
-                if (tcis.getDeckCount() == 0) {
-                    deckManager.createDeck(tcis);
+                if (tcis.getDeckManager().getDeckCount() == 0) {
+                    tcis.getDeckManager().createDeck();
                 } else {
-                    deckManager.manageDecks(tcis);
+                    tcis.getDeckManager().manageDecks(tcis);
                 }
             } else if (choice == 0) {
                 running = false;
