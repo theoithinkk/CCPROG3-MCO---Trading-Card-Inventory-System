@@ -1,7 +1,39 @@
-import java.util.Scanner;
+package com.tciss;
 
 public class DeckManager {
+    private Input scanner;
+    private Deck[] decks;
+    private int deckCount;
+    private final int MAX_DECKS = 50;
 
+    public DeckManager(Input sc){
+        this.scanner = sc;
+        this.decks = new Deck[MAX_DECKS];
+        this.deckCount = 0;
+    }
+    
+    public Deck[] getDecks() {
+        return this.decks;
+    }
+    
+    private Deck getDeck(String name) {
+        for (int i = 0; i < deckCount; i++) {
+            if (decks[i] != null && decks[i].getName().equalsIgnoreCase(name)) {
+                return decks[i];
+            }
+        }
+        return null;
+    }
+
+    public int getDeckCount() {
+        return this.deckCount;
+    }
+   
+    
+    public void addDeckCount(int count) {
+        this.deckCount += count;
+    }
+    
     /*
      * Manages existing decks
      */
@@ -17,10 +49,10 @@ public class DeckManager {
             System.out.println("5. View Deck");
             System.out.println("0. Go back to Main Menu");
 
-            int choice = tcis.getIntInput("Enter your choice: ");
+            int choice = scanner.getIntInput("Enter your choice: ");
 
             if (choice == 1) {
-                createDeck(tcis);
+                createDeck();
             } else if (choice == 2) {
                 deleteDeck(tcis);
             } else if (choice == 3) {
@@ -40,19 +72,14 @@ public class DeckManager {
     /**
      * Creates a new deck
      */
-    public void createDeck(TradingCardInventorySystem tcis) {
+    public void createDeck() {
         System.out.println("\n=== Create New Deck ===");
-        Scanner scanner = new Scanner(System.in);
-        Deck[] decks = tcis.getDecks();
-        int deckCount = tcis.getDeckCount();
 
-        System.out.print("Enter deck name: ");
-        String name = scanner.nextLine().trim();
+        String name = scanner.ask("Enter deck name");
 
         if (name.isEmpty()) {
             System.out.println("Deck name cannot be empty.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
@@ -60,37 +87,31 @@ public class DeckManager {
         for (int i = 0; i < deckCount; i++) {
             if (decks[i].getName().equals(name)) {
                 System.out.println("Deck with this name already exists.");
-                System.out.print("Press Enter to continue...");
-                scanner.nextLine();
+                scanner.hitEnter();
                 return;
             }
         }
 
         decks[deckCount] = new Deck(name);
-        tcis.addDeckCount(1);
+        addDeckCount(1);
         System.out.println("Deck created successfully!");
     }
 
     /**
      * Deletes a deck and returns cards to collection
      */
-    public void deleteDeck(TradingCardInventorySystem tcis) {
+    private void deleteDeck(TradingCardInventorySystem tcis) {
         System.out.println("\n=== Delete Deck ===");
-        Scanner scanner = new Scanner(System.in);
-        Deck[] decks = tcis.getDecks();
-        int deckCount = tcis.getDeckCount();
-
+ 
         if (deckCount == 0) {
             System.out.println("No decks to delete.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
-        displayDecks(tcis);
+        displayDecks();
 
-        System.out.print("Enter deck name to delete: ");
-        String name = scanner.nextLine().trim();
+        String name = scanner.ask("Enter deck name to delete: ");
 
         for (int i = 0; i < deckCount; i++) {
             if (decks[i].getName().equals(name)) {
@@ -105,26 +126,22 @@ public class DeckManager {
                     decks[j] = decks[j + 1];
                 }
                 decks[deckCount - 1] = null;
-                tcis.addDeckCount(-1);
+                addDeckCount(-1);
 
                 System.out.println("Deck deleted successfully! All cards returned to collection.");
-                System.out.print("Press Enter to continue...");
-                scanner.nextLine();
+                scanner.hitEnter();
                 return;
             }
         }
 
         System.out.println("Deck not found.");
-        System.out.print("Press Enter to continue...");
-        scanner.nextLine();
+        scanner.hitEnter();
     }
 
     /**
      * Displays all decks
      */
-    public void displayDecks(TradingCardInventorySystem tcis) {
-        Deck[] decks = tcis.getDecks();
-        int deckCount = tcis.getDeckCount();
+    private void displayDecks() {
         System.out.println("Available Decks:");
         for (int i = 0; i < deckCount; i++) {
             System.out.println("- " + decks[i].getName());
@@ -135,76 +152,57 @@ public class DeckManager {
      * Adds a card to a deck
      */
     public void addCardToDeck(TradingCardInventorySystem tcis) {
-        Deck[] decks = tcis.getDecks();
-        Scanner scanner = new Scanner(System.in);
-        int deckCount = tcis.getDeckCount();
         System.out.println("\n=== Add Card to Deck ===");
 
         if (deckCount == 0) {
             System.out.println("No decks available.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         if (!tcis.getCollection().hasAvailableCards()) {
             System.out.println("No available cards in collection.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
-        displayDecks(tcis);
+        displayDecks();
 
-        System.out.print("Enter deck name: ");
-        String deckName = scanner.nextLine().trim();
+        String deckName = scanner.ask("Enter deck name: ");
 
-        Deck selectedDeck = null;
-        int found = 0;
-        for (int i = 0; i < deckCount && found == 0; i++) {
-            if (decks[i].getName().equals(deckName)) {
-                selectedDeck = decks[i];
-                found = 1;
-            }
-        }
+        Deck selectedDeck = getDeck(deckName);
 
         if (selectedDeck == null) {
             System.out.println("Deck not found.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         if (selectedDeck.isFull()) {
             System.out.println("Deck is full. Cannot add more cards.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         tcis.getCollection().displayAvailableCards();
 
-        System.out.print("Enter card name to add: ");
-        String cardName = scanner.nextLine().trim();
+        String cardName = scanner.ask("Enter card name to add: ");
 
         Card card = tcis.getCollection().getAvailableCard(cardName);
         if (card != null) {
-            if (selectedDeck.hasCard(cardName)) {
+            if (selectedDeck.getCard(cardName) != null) {
                 System.out.println("Card with this name already exists in deck. Cannot add duplicate.");
-                System.out.print("Press Enter to continue...");
-                scanner.nextLine();
+                scanner.hitEnter();
                 return;
             }
 
             selectedDeck.addCard(card);
-            tcis.getCollection().removeCard(cardName);
+            tcis.getCollection().decreaseCardCount(cardName);
             System.out.println("Card added to deck successfully!");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         } else {
             System.out.println("Card not available in collection.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         }
     }
 
@@ -213,60 +211,43 @@ public class DeckManager {
      */
     public void removeCardFromDeck(TradingCardInventorySystem tcis) {
         System.out.println("\n=== Remove Card from Deck ===");
-        Scanner scanner = new Scanner(System.in);
-        Deck[] decks = tcis.getDecks();
-        int deckCount = tcis.getDeckCount();
 
         if (deckCount == 0) {
             System.out.println("No decks available.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
-        displayDecks(tcis);
+        displayDecks();
 
-        System.out.print("Enter deck name: ");
-        String deckName = scanner.nextLine().trim();
+        String deckName = scanner.ask("Enter deck name: ");
 
-        Deck selectedDeck = null;
-        int found = 0;
-        for (int i = 0; i < deckCount && found == 0; i++) {
-            if (decks[i].getName().equals(deckName)) {
-                selectedDeck = decks[i];
-                found = 1;
-            }
-        }
+        Deck selectedDeck = getDeck(deckName);
 
         if (selectedDeck == null) {
             System.out.println("Deck not found.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         if (selectedDeck.isEmpty()) {
             System.out.println("Deck is empty.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         selectedDeck.displayCards();
 
-        System.out.print("Enter card name to remove: ");
-        String cardName = scanner.nextLine().trim();
+        String cardName = scanner.ask("Enter card name to remove: ");
 
         Card card = selectedDeck.removeCard(cardName);
         if (card != null) {
             tcis.getCollection().addCard(card);
             System.out.println("Card removed from deck and returned to collection!");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         } else {
             System.out.println("Card not found in deck.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         }
     }
 
@@ -275,47 +256,32 @@ public class DeckManager {
      */
     public void viewDeck(TradingCardInventorySystem tcis) {
         System.out.println("\n=== View Deck ===");
-        Scanner scanner = new Scanner(System.in);
-        Deck[] decks = tcis.getDecks();
-        int deckCount = tcis.getDeckCount();
 
         if (deckCount == 0) {
             System.out.println("No decks available.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
-        displayDecks(tcis);
+        displayDecks();
 
-        System.out.print("Enter deck name: ");
-        String deckName = scanner.nextLine().trim();
+        String deckName = scanner.ask("Enter deck name: ");
 
-        Deck selectedDeck = null;
-        int found = 0;
-        for (int i = 0; i < deckCount && found == 0; i++) {
-            if (decks[i].getName().equals(deckName)) {
-                selectedDeck = decks[i];
-                found = 1;
-            }
-        }
+        Deck selectedDeck = getDeck(deckName);
 
         if (selectedDeck == null) {
             System.out.println("Deck not found.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
             return;
         }
 
         selectedDeck.displayCards();
 
         if (!selectedDeck.isEmpty()) {
-            System.out.print("Do you want to view details of a specific card? (y/n): ");
-            String response = scanner.nextLine().trim().toLowerCase();
+            String response = scanner.askLowerTrimmed("Do you want to view details of a specific card? (y/n): ");
 
             if (response.equals("y") || response.equals("yes")) {
-                System.out.print("Enter card name: ");
-                String cardName = scanner.nextLine().trim();
+            	String cardName = scanner.ask("Enter card name: ");
 
                 Card card = selectedDeck.getCard(cardName);
                 if (card != null) {
