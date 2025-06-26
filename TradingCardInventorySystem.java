@@ -1,4 +1,5 @@
-import java.util.Scanner;
+package com.tciss;
+
 
 /**
  * Main class for the Trading Card Inventory System (TCIS)
@@ -9,23 +10,19 @@ import java.util.Scanner;
  */
 public class TradingCardInventorySystem {
     private Collection collection;
-    private Binder[] binders;
-    private Deck[] decks;
-    private int binderCount;
-    private int deckCount;
-    private Scanner scanner;
+    private DeckManager deckManager;
+    private BinderManager binderManager;
+    private Input scanner;
 
     /**
      * Constructor for TradingCardInventorySystem
      * Initializes the collection, arrays for binders and decks, and scanner
      */
-    public TradingCardInventorySystem() {
-        this.collection = new Collection();
-        this.binders = new Binder[50];
-        this.decks = new Deck[50];
-        this.binderCount = 0;
-        this.deckCount = 0;
-        this.scanner = new Scanner(System.in);
+    public TradingCardInventorySystem(Input input) {
+        this.scanner = input;
+        this.collection = new Collection(input);
+        this.binderManager = new BinderManager(input);
+        this.deckManager = new DeckManager(input);
     }
 
     /**
@@ -41,13 +38,13 @@ public class TradingCardInventorySystem {
             System.out.println("4. Display Collection");
         }
 
-        if (binderCount == 0) {
+        if (binderManager.getBinderCount() == 0) {
             System.out.println("5. Create a new Binder");
         } else {
             System.out.println("5. Manage Binders");
         }
 
-        if (deckCount == 0) {
+        if (deckManager.getDeckCount() == 0) {
             System.out.println("6. Create a new Deck");
         } else {
             System.out.println("6. Manage Decks");
@@ -63,8 +60,7 @@ public class TradingCardInventorySystem {
      * Adds a new card to the collection via manual input
      */
     public Card addCard(char ver) {
-        System.out.print("Enter card name: ");
-        String name = scanner.nextLine().trim();
+        String name = scanner.ask("Enter card name: ");
 
         if (name.isEmpty()) {
             System.out.println("Card name cannot be empty.");
@@ -74,14 +70,12 @@ public class TradingCardInventorySystem {
         // for normal adding of cards
         if (collection.cardExists(name) && ver == 'C') {
             System.out.println("Card '" + name + "' already exists in the collection.");
-            System.out.print("Do you want to increase the count instead? (y/n): ");
-            String response = scanner.nextLine().trim().toLowerCase();
+            String response = scanner.askLowerTrimmed("Do you want to increase the count instead? (y/n): ");
 
             if (response.equals("y") || response.equals("yes")) {
                 collection.increaseCardCount(name);
                 System.out.println("Card count increased successfully!");
-                System.out.print("Press Enter to continue...");
-                scanner.nextLine();
+                scanner.hitEnter();
             }
             return null;
             // for trade adding of cards
@@ -97,7 +91,7 @@ public class TradingCardInventorySystem {
         System.out.println("3. Rare");
         System.out.println("4. Legendary");
 
-        int choiceRar = getIntInput("Enter choice (1-4): ");
+        int choiceRar = scanner.getIntInput("Enter choice (1-4): ");
 
         if (choiceRar == 1) {
             rarity = Card.Rarity.COMMON;
@@ -126,7 +120,7 @@ public class TradingCardInventorySystem {
             System.out.println("3. Full-art");
             System.out.println("4. Alt-art");
 
-            int choiceVar = getIntInput("Enter choice (1-4): ");
+            int choiceVar = scanner.getIntInput("Enter choice (1-4): ");
 
             if (choiceVar == 1) {
                 variant = Card.Variant.NORMAL;
@@ -146,18 +140,7 @@ public class TradingCardInventorySystem {
             }
         }
 
-        double value = -1;
-        boolean validInput = false;
-
-        while (!validInput) {
-            System.out.print("Enter card value: $");
-            try {
-                value = Double.parseDouble(scanner.nextLine().trim());
-                validInput = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
-            }
-        }
+        double value = scanner.askDouble("Enter card value: $");
 
         if (value < 0) {
             System.out.println("Card value cannot be negative. Card not added.");
@@ -177,8 +160,7 @@ public class TradingCardInventorySystem {
 
         collection.displayCollection();
 
-        System.out.print("Enter card name: ");
-        String name = scanner.nextLine().trim();
+        String name = scanner.ask("Enter card name: ");
 
         if (!collection.cardExists(name)) {
             System.out.println("Card not found in collection.");
@@ -187,74 +169,34 @@ public class TradingCardInventorySystem {
 
         System.out.println("1. Increase count");
         System.out.println("2. Decrease count");
-        int choice = getIntInput("Enter choice (1-2): ");
+        int choice = scanner.getIntInput("Enter choice (1-2): ");
 
         if (choice == 1) {
             collection.increaseCardCount(name);
             System.out.println("Card count increased successfully!");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         } else if (choice == 2) {
-            collection.removeCard(name);
+            collection.decreaseCardCount(name);
             System.out.println("Card count decreased successfully!");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         } else {
             System.out.println("Invalid choice.");
-            System.out.print("Press Enter to continue...");
-            scanner.nextLine();
+            scanner.hitEnter();
         }
 
     }
-
-    /**
-     * Gets integer input from user with validation
-     *
-     * @param prompt the prompt to display
-     * @return the integer input
-     */
-    public int getIntInput(String prompt) {
-        int input = -1;
-        boolean validInput = false;
-
-        while (!validInput) {
-            System.out.print(prompt);
-            try {
-                input = Integer.parseInt(scanner.nextLine().trim());
-                validInput = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid integer.");
-            }
-        }
-
-        return input;
-    }
+    
     // Getters
     public Collection getCollection() {
         return this.collection;
     }
-
-    public Binder[] getBinders() {
-        return this.binders;
+    
+    public DeckManager getDeckManager() {
+    	return this.deckManager;
+    }
+    
+    public BinderManager getBinderManager() {
+    	return this.binderManager;
     }
 
-    public Deck[] getDecks() {
-        return this.decks;
-    }
-
-    public int getBinderCount() {
-        return this.binderCount;
-    }
-
-    public int getDeckCount() {
-        return this.deckCount;
-    }
-
-    // Setters (adjusters kinda)
-    public void addBinderCount(int count) {
-        this.binderCount += count;
-    }
-    public void addDeckCount(int count) {
-        this.deckCount += count;
-    }
 }
