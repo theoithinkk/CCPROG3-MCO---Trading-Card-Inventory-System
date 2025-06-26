@@ -1,4 +1,7 @@
-import java.util.Scanner;
+package com.tciss;
+
+
+
 /**
  * Represents a collection of trading cards
  * Manages cards and their counts
@@ -11,15 +14,17 @@ public class Collection {
     private Card[] cards;
     private int[] counts;
     private int cardCount;
+    private Input scanner;
 
     /**
      * Constructor for Collection
      * Initializes arrays with capacity for 1000 unique cards
      */
-    public Collection() {
+    public Collection(Input scanner) {
         this.cards = new Card[200]; // Maximum 1000 unique cards
         this.counts = new int[200];
         this.cardCount = 0;
+        this.scanner = scanner;
     }
 
     /**
@@ -85,11 +90,11 @@ public class Collection {
     }
 
     /**
-     * Removes one instance of a card from the collection
+     * Decreases the count of a card by name
      *
-     * @param name the name of the card to remove
+     * @param name the name of the card
      */
-    public void removeCard(String name) {
+    public void decreaseCardCount(String name) {
         for (int i = 0; i < cardCount; i++) {
             if (cards[i].getName().equals(name) && counts[i] > 0) {
                 counts[i]--;
@@ -125,7 +130,6 @@ public class Collection {
      * Displays the entire collection sorted alphabetically by card name
      */
     public void displayCollection() {
-        Scanner scanner = new Scanner(System.in);
         if (cardCount == 0) {
             System.out.println("Collection is empty.");
             return;
@@ -174,7 +178,7 @@ public class Collection {
 
         // Collect available cards
         for (int i = 0; i < cardCount; i++) {
-            if (counts[i] > 0) {
+            if (counts[i] >= 0) {
                 availableNames[availableCount] = cards[i].getName();
                 availableCounts[availableCount] = counts[i];
                 availableCount++;
@@ -214,22 +218,18 @@ public class Collection {
     public void displayCard() {
         System.out.println("\n=== Display Card ===");
         displayAvailableCards();
-        System.out.print("Enter card name: ");
-        Scanner scanner = new Scanner(System.in);
-        String name = scanner.nextLine().trim();
+        String name = scanner.ask("Enter card name: ");
 
         for (int i = 0; i < cardCount; i++) {
             if (cards[i].getName().equalsIgnoreCase(name)) {
                 System.out.println(cards[i].getDetailedInfo());
                 System.out.println("Copies in collection: " + counts[i]);
-                System.out.print("Press Enter to continue...");
-                scanner.nextLine();
+                scanner.hitEnter();
                 return;
             }
         }
 
         System.out.println("Card not found in collection.");
-        System.out.print("Press Enter to continue...");
-        scanner.nextLine();
+        scanner.hitEnter();
     }
 }
