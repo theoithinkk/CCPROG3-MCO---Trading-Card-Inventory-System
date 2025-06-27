@@ -68,7 +68,8 @@ public class TradingCardInventorySystem {
         }
 
         // for normal adding of cards
-        if (collection.cardExists(name) && ver == 'C') {
+        boolean exists = collection.cardExists(name);
+        if (exists && ver == 'C') {
             System.out.println("Card '" + name + "' already exists in the collection.");
             String response = scanner.askLowerTrimmed("Do you want to increase the count instead? (y/n): ");
 
@@ -79,32 +80,16 @@ public class TradingCardInventorySystem {
             }
             return null;
             // for trade adding of cards
-        } else if (collection.cardExists(name) && ver == 'T') {
+        } else if (exists && ver == 'T') {
             System.out.println("Card '" + name + "' already exists in the collection.");
             return collection.getAvailableCard(name);
         }
 
-        String rarity;
-        System.out.println("Select rarity:");
-        System.out.println("1. Common");
-        System.out.println("2. Uncommon");
-        System.out.println("3. Rare");
-        System.out.println("4. Legendary");
-
-        int choiceRar = scanner.getIntInput("Enter choice (1-4): ");
-
-        if (choiceRar == 1) {
-            rarity = Card.Rarity.COMMON;
-        } else if (choiceRar == 2) {
-            rarity = Card.Rarity.UNCOMMON;
-        } else if (choiceRar == 3) {
-            rarity = Card.Rarity.RARE;
-        } else if (choiceRar == 4) {
-            rarity = Card.Rarity.LEGENDARY;
-        } else {
-            rarity = null;
-        }
-
+       return createCard(name);
+    }
+    
+    private Card createCard(String name) {
+        String rarity = promptRarity();
         if (rarity == null) {
             System.out.println("Invalid rarity. Card not added.");
             return null;
@@ -114,26 +99,7 @@ public class TradingCardInventorySystem {
         if (rarity.equals(Card.Rarity.COMMON) || rarity.equals(Card.Rarity.UNCOMMON)) {
             variant = Card.Variant.NORMAL;
         } else {
-            System.out.println("Select variant:");
-            System.out.println("1. Normal");
-            System.out.println("2. Extended-art");
-            System.out.println("3. Full-art");
-            System.out.println("4. Alt-art");
-
-            int choiceVar = scanner.getIntInput("Enter choice (1-4): ");
-
-            if (choiceVar == 1) {
-                variant = Card.Variant.NORMAL;
-            } else if (choiceVar == 2) {
-                variant = Card.Variant.EXTENDED_ART;
-            } else if (choiceVar == 3) {
-                variant = Card.Variant.FULL_ART;
-            } else if (choiceVar == 4) {
-                variant = Card.Variant.ALT_ART;
-            } else {
-                variant = null;
-            }
-
+            variant = promptVariant();
             if (variant == null) {
                 System.out.println("Invalid variant. Card not added.");
                 return null;
@@ -141,16 +107,14 @@ public class TradingCardInventorySystem {
         }
 
         double value = scanner.askDouble("Enter card value: $");
-
         if (value < 0) {
             System.out.println("Card value cannot be negative. Card not added.");
             return null;
         }
 
-        Card card = new Card(name, rarity, variant, value);
-
-        return card;
+        return new Card(name, rarity, variant, value);
     }
+
 
     /**
      * Manages increasing or decreasing card count
@@ -184,6 +148,38 @@ public class TradingCardInventorySystem {
             scanner.hitEnter();
         }
 
+    }
+    
+    private String promptRarity() {
+    	 System.out.println("Select rarity:");
+         System.out.println("1. Common");
+         System.out.println("2. Uncommon");
+         System.out.println("3. Rare");
+         System.out.println("4. Legendary");
+         int choiceRar = scanner.getIntInput("Enter choice (1-4): ");
+         return switch(choiceRar) {
+         	case 1 -> Card.Variant.NORMAL;
+         	case 2 ->  Card.Rarity.UNCOMMON;
+         	case 3 -> Card.Rarity.RARE;
+         	case 4 -> Card.Rarity.LEGENDARY;
+         	default -> null;
+         };
+    }
+    
+    private String promptVariant() {
+    	System.out.println("Select variant:");
+        System.out.println("1. Normal");
+        System.out.println("2. Extended-art");
+        System.out.println("3. Full-art");
+        System.out.println("4. Alt-art");
+        int choiceVar = scanner.getIntInput("Enter choice (1-4): ");
+        return switch(choiceVar) {
+        	case 1 -> Card.Variant.NORMAL;
+        	case 2 -> Card.Variant.EXTENDED_ART;
+        	case 3 -> Card.Variant.ALT_ART;
+        	case 4 -> Card.Variant.FULL_ART;
+        	default -> null;
+        };
     }
     
     // Getters
