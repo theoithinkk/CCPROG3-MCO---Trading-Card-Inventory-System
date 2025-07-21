@@ -18,6 +18,8 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         Input input = new Input(scanner);
         TradingCardInventorySystem tcis = new TradingCardInventorySystem(input);
+        BinderMenu  binderMenu = new BinderMenu(tcis.getBinderManager(), tcis, input);
+        DeckMenu deckMenu = new DeckMenu(tcis.getDeckManager(), tcis, input);
         boolean running = true;
 
         while (running) {
@@ -44,16 +46,16 @@ public class Main {
                 System.out.print("Press Enter to continue...");
                 scanner.nextLine();
             } else if (choice == 5) {
-               if (tcis.getBinderManager().getBinderCount() == 0) {
-                    tcis.getBinderManager().createBinder();
+               if (tcis.getBinderManager().getContainerCount() == 0) {
+                    binderMenu.addNewContainer();
                 } else {
-                    tcis.getBinderManager().manageBinders(tcis);
+                    binderMenu.showMenu();
                 }
             } else if (choice == 6) {
-                if (tcis.getDeckManager().getDeckCount() == 0) {
-                    tcis.getDeckManager().createDeck();
+                if (tcis.getDeckManager().getContainerCount() == 0) {
+                    deckMenu.addNewContainer();
                 } else {
-                    tcis.getDeckManager().manageDecks(tcis);
+                    deckMenu.showMenu();
                 }
             } else if (choice == 0) {
                 running = false;
