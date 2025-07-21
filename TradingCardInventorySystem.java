@@ -21,8 +21,9 @@ public class TradingCardInventorySystem {
     public TradingCardInventorySystem(Input input) {
         this.scanner = input;
         this.collection = new Collection(input);
-        this.binderManager = new BinderManager(input);
-        this.deckManager = new DeckManager(input);
+        this.binderManager = new BinderManager(50);
+        
+        this.deckManager = new DeckManager(50);
     }
 
     /**
@@ -38,13 +39,13 @@ public class TradingCardInventorySystem {
             System.out.println("4. Display Collection");
         }
 
-        if (binderManager.getBinderCount() == 0) {
+        if (binderManager.getContainerCount() == 0) {
             System.out.println("5. Create a new Binder");
         } else {
             System.out.println("5. Manage Binders");
         }
 
-        if (deckManager.getDeckCount() == 0) {
+        if (deckManager.getContainerCount() == 0) {
             System.out.println("6. Create a new Deck");
         } else {
             System.out.println("6. Manage Decks");
@@ -79,7 +80,7 @@ public class TradingCardInventorySystem {
                 scanner.hitEnter();
             }
             return null;
-            // for trade adding of cards
+            // for trade adding of cards	
         } else if (exists && ver == 'T') {
             System.out.println("Card '" + name + "' already exists in the collection.");
             return collection.getAvailableCard(name);
