@@ -94,13 +94,14 @@ public class Collection {
      *
      * @param name the name of the card
      */
-    public void decreaseCardCount(String name) {
+    public boolean decreaseCardCount(String name) {
         for (int i = 0; i < cardCount; i++) {
             if (cards[i].getName().equals(name) && counts[i] > 0) {
                 counts[i]--;
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     /**
@@ -166,58 +167,11 @@ public class Collection {
     }
 
     /**
-     * Displays only available cards (count > 0) sorted alphabetically
-     */
-    public void displayAvailableCards() {
-        boolean hasAvailable = false;
-
-        // Create arrays for available cards
-        String[] availableNames = new String[cardCount];
-        int[] availableCounts = new int[cardCount];
-        int availableCount = 0;
-
-        // Collect available cards
-        for (int i = 0; i < cardCount; i++) {
-            if (counts[i] >= 0) {
-                availableNames[availableCount] = cards[i].getName();
-                availableCounts[availableCount] = counts[i];
-                availableCount++;
-                hasAvailable = true;
-            }
-        }
-
-        if (!hasAvailable) {
-            System.out.println("No available cards in collection.");
-            return;
-        }
-
-        // Sort available cards
-        for (int i = 0; i < availableCount - 1; i++) {
-            for (int j = 0; j < availableCount - 1 - i; j++) {
-                if (availableNames[j].compareToIgnoreCase(availableNames[j + 1]) > 0) {
-                    String tempName = availableNames[j];
-                    availableNames[j] = availableNames[j + 1];
-                    availableNames[j + 1] = tempName;
-
-                    int tempCount = availableCounts[j];
-                    availableCounts[j] = availableCounts[j + 1];
-                    availableCounts[j + 1] = tempCount;
-                }
-            }
-        }
-
-        System.out.println("Available cards in collection:");
-        for (int i = 0; i < availableCount; i++) {
-            System.out.println("- " + availableNames[i] + " (Available: " + availableCounts[i] + ")");
-        }
-    }
-
-    /**
      * Displays detailed information about a specific card in the collection
      */
     public void displayCard() {
         System.out.println("\n=== Display Card ===");
-        displayAvailableCards();
+        displayCollection();
         String name = scanner.ask("Enter card name: ");
 
         for (int i = 0; i < cardCount; i++) {
