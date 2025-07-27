@@ -7,10 +7,12 @@ import java.awt.*;
 
 public class BinderPanel extends JPanel {
     private final BinderController controller;
+    private final BinderViewHelper helper;
     private JPanel binderListPanel;
 
     public BinderPanel(TradingCardInventorySystem tcis, TCISGUI parentGui) {
         this.controller = new BinderController(tcis, parentGui);
+		this.helper = new BinderViewHelper();
         setLayout(new BorderLayout());
 
         // Create Binder Button
@@ -28,7 +30,7 @@ public class BinderPanel extends JPanel {
     public void refreshBinders(TradingCardInventorySystem tcis) {
         binderListPanel.removeAll();
         for (Binder binder : tcis.getBinders()) {
-            binderListPanel.add(BinderViewHelper.createBinderPanel(binder, tcis, controller));
+            binderListPanel.add(helper.createContainerPanel(binder, tcis, controller));
         }
         binderListPanel.revalidate();
         binderListPanel.repaint();

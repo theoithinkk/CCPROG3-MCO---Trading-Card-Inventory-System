@@ -13,7 +13,7 @@ import java.awt.event.*;
  * Helper class for creating and managing binder-related UI components.
  * Contains static methods for various dialog windows and panel creations.
  */
-public class BinderViewHelper {
+public class BinderViewHelper extends CardContainerViewHelper{
     
     /**
      * Creates a panel displaying binder information with action buttons.
@@ -22,7 +22,9 @@ public class BinderViewHelper {
      * @param controller The binder controller for handling actions
      * @return Configured JPanel with binder information
      */
-    public static JPanel createBinderPanel(Binder binder, TradingCardInventorySystem tcis, BinderController controller) {
+    public JPanel createContainerPanel(CardContainer container, TradingCardInventorySystem tcis, ContainerController controller) {
+    	Binder binder = (Binder)container;
+        BinderController binderController = (BinderController)controller;
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -34,16 +36,16 @@ public class BinderViewHelper {
 
         // Standard action buttons
         addActionButton(panel, "View Details", e -> controller.handleViewDetails(binder));
-        addActionButton(panel, "Add Card", e -> showAddCardDialog(binder, tcis, controller));
+        addActionButton(panel, "Add Card", e -> showAddCardDialog(binder, tcis, binderController));
         
         // Conditional buttons based on binder properties
         if (binder.isTradeable()) {
-            addActionButton(panel, "Trade", e -> controller.handleTrade(binder));
+            addActionButton(panel, "Trade", e -> binderController.handleTrade(binder));
         }
         if (binder.isSellable()) {
-            addActionButton(panel, "Sell Binder", e -> controller.handleSale(binder));
+            addActionButton(panel, "Sell Binder", e -> binderController.handleSale(binder));
         }
-        addActionButton(panel, "Delete Binder", e -> confirmDeleteBinder(binder, controller));
+        addActionButton(panel, "Delete Binder", e -> confirmDelete(binder, binderController));
 
         return panel;
     }
@@ -73,68 +75,6 @@ public class BinderViewHelper {
                 showErrorDialog("Error: " + ex.getMessage());
             }
         }
-    }
-
-    /**
-     * Helper method to add styled action buttons to panels.
-     * @param panel The panel to add the button to
-     * @param text Button text
-     * @param listener Action to perform when clicked
-     */
-    private static void addActionButton(JPanel panel, String text, ActionListener listener) {
-        JButton btn = new JButton(text);
-        btn.addActionListener(listener);
-        panel.add(btn);
-    }
-    
-    /**
-     * Shows confirmation dialog before deleting a binder.
-     * @param binder The binder to potentially delete
-     * @param controller The binder controller to handle deletion
-     */
-    public static void confirmDeleteBinder(Binder binder, BinderController controller) {
-        int response = JOptionPane.showConfirmDialog(
-            null,
-            "Are you sure you want to delete '" + binder.getName() + "'?",
-            "Confirm Delete",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE
-        );
-
-        if (response == JOptionPane.YES_OPTION) {
-            controller.handleDeleteBinder(binder);
-        }
-    }
-
-    /**
-     * Displays detailed information about a binder's contents.
-     * @param binder The binder to display
-     */
-    public static void showBinderDetails(Binder binder) {
-        StringBuilder sb = new StringBuilder();
-        // Format each card's information
-        for (Card c : binder.getCards()) {
-            sb.append(String.format(
-                "%s | %s | %s | Base: $%.2f\n",
-                c.getName(), c.getRarity(), c.getVariant(), c.getBaseValue()
-            ));
-        }
-        // Append total value at bottom
-        sb.append("\nTotal Value: $").append(binder.getTotalValue());
-        JOptionPane.showMessageDialog(null, sb.toString());
-    }
-    
-    /**
-     * Displays an error message dialog.
-     * @param message The error message to display
-     */
-    public static void showErrorDialog(String message) {
-        JOptionPane.showMessageDialog(
-            null, 
-            message, 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE
-        );
     }
     
     /**
@@ -207,49 +147,6 @@ public class BinderViewHelper {
     }
     
     /**
-     * Shows dialog for adding a card from collection to binder.
-     * @param binder The target binder
-     * @param tcis Reference to the system
-     * @param controller The binder controller
-     */
-    public static void showAddCardDialog(Binder binder, TradingCardInventorySystem tcis, BinderController controller) {
-        // Filter to only cards not already in this binder
-        List<Card> availableCards = tcis.getCollection().getAllCards().stream()
-            .filter(card -> !binder.getCards().contains(card))
-            .toList();
-
-        if (availableCards.isEmpty()) {
-            showErrorDialog("No available cards in collection to add!");
-            return;
-        }
-
-        // Create card selection dropdown
-        JComboBox<Card> cardCombo = new JComboBox<>(availableCards.toArray(new Card[0]));
-
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Select card from collection:"));
-        panel.add(cardCombo);
-
-        if (JOptionPane.showConfirmDialog(
-                null, panel, "Add Card to Binder", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
-            controller.handleAddCard(binder, (Card) cardCombo.getSelectedItem());
-        }
-    }
-
-    /**
-     * Creates a panel for trade information input (unused in current implementation).
-     * @return Configured trade dialog panel
-     */
-    public static JPanel createTradeDialog() {
-        JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("Card Name:")); panel.add(new JTextField());
-        panel.add(new JLabel("Rarity:")); panel.add(new JComboBox<>(Rarity.values()));
-        panel.add(new JLabel("Variant:")); panel.add(new JComboBox<>(Variant.values()));
-        panel.add(new JLabel("Base Value:")); panel.add(new JTextField());
-        return panel;
-    }
-    
-    /**
      * Shows confirmation dialog for unbalanced trades.
      * @param outgoingStr Description of outgoing card
      * @param incomingStr Description of incoming card
@@ -288,16 +185,38 @@ public class BinderViewHelper {
     }
     
     /**
-     * Displays an informational message dialog.
-     * @param title Dialog title
-     * @param message The message to display
+     * Shows a dialog for adding cards from the collection to a specific binder.
+     * Implements the abstract method from CardContainerViewHelper with binder-specific behavior.
+     * 
+     * @param container The binder to add cards to (must be castable to Binder)
+     * @param tcis Reference to the main trading card system
+     * @param controller The controller to handle the add operation (must be castable to BinderController)
      */
-    public static void showInfoDialog(String title, String message) {
-        JOptionPane.showMessageDialog(
-            null, 
-            message, 
-            title, 
-            JOptionPane.INFORMATION_MESSAGE
-        );
-    }
+	@Override
+	protected void showAddCardDialog(CardContainer container, TradingCardInventorySystem tcis, ContainerController controller) {
+		// Filter to only cards not already in this binder
+		Binder binder = (Binder)container;
+        BinderController binderController = (BinderController)controller;
+        List<Card> availableCards = tcis.getCollection().getAllCards().stream()
+            .filter(card -> !binder.getCards().contains(card))
+            .toList();
+
+        if (availableCards.isEmpty()) {
+            showErrorDialog("No available cards in collection to add!");
+            return;
+        }
+
+        // Create card selection dropdown
+        JComboBox<Card> cardCombo = new JComboBox<>(availableCards.toArray(new Card[0]));
+
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Select card from collection:"));
+        panel.add(cardCombo);
+
+        if (JOptionPane.showConfirmDialog(
+                null, panel, "Add Card to Binder", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+            binderController.handleAddCard(container, (Card) cardCombo.getSelectedItem());
+        }
+		
+	}
 }
