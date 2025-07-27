@@ -16,6 +16,8 @@ public abstract class CardContainer {
         this.cards = new HashMap<>();
     }
     
+    public abstract boolean canAddCard(Card card);
+    
     public String getName() { return name; }
     public int getCapacity() { return capacity; }
     
@@ -32,6 +34,11 @@ public abstract class CardContainer {
                 cards.put(card, 0);
             }
         }
+    }
+    
+    public boolean hasCard(String cardName) {
+        Card lookup = new Card(cardName, null, null, 0.0);
+        return cards.containsKey(lookup);
     }
     
     public int getCardCount(Card card) {
@@ -63,4 +70,8 @@ public abstract class CardContainer {
     public Map<Card, Integer> getCardsWithCounts() {
         return new HashMap<>(cards);
     }
+
+	protected abstract boolean isSellable();
+
+	protected abstract double getSellingValue();
 }

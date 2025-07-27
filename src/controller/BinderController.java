@@ -1,106 +1,64 @@
 package controller;
-
 import model.*;
 import enums.*;
 import view.*;
 import javax.swing.*;
-import java.awt.*;
 
-public class BinderController {
-	public static void openCreateBinderDialog(TradingCardInventorySystem tcis, TCISGUI gui, BinderPanel panel) {
-	    JPanel dialogPanel = new JPanel(new GridLayout(0, 2));
-	    JTextField nameField = new JTextField();
-	    JComboBox<BinderType> typeBox = new JComboBox<>(BinderType.values());
+public class BinderController extends ContainerController{
+	
+    public BinderController(TradingCardInventorySystem tcis, TCISGUI gui) {
+        super(tcis, gui);
+    }
 
-	    dialogPanel.add(new JLabel("Binder Name:"));
-	    dialogPanel.add(nameField);
-	    dialogPanel.add(new JLabel("Binder Type:"));
-	    dialogPanel.add(typeBox);
+    /**
+     * Handles the complete trade process between cards in a binder and the collection.
+     * @param binder The binder involved in the trade
+     */
+    public void handleTrade(Binder binder) {
+        Card outgoingCard = BinderViewHelper.selectOutgoingCard(binder);
+        if (outgoingCard == null) return;
 
-	    int result = JOptionPane.showConfirmDialog(null, dialogPanel, "Create Binder", JOptionPane.OK_CANCEL_OPTION);
-	    if (result == JOptionPane.OK_OPTION) {
-	        try {
-	            tcis.createBinder(nameField.getText(), (BinderType) typeBox.getSelectedItem());
-	            panel.refreshBinders(tcis, gui);
-	            gui.updateStatsPanel();
-	        } catch (Exception ex) {
-	            JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
-	        }
-	    }
-	}
+        Card incomingCard = BinderViewHelper.createIncomingCardDialog();
+        if (incomingCard == null) return;
 
-    public static JPanel createBinderPanel(Binder binder, TradingCardInventorySystem tcis, TCISGUI gui) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        try {
+            double valueDifference = incomingCard.getTotalValue() - outgoingCard.getTotalValue();
 
-        panel.add(new JLabel(binder.getName()));
-        panel.add(new JLabel("Type: " + binder.getType()));
-        panel.add(new JLabel("Cards: " + binder.getTotalCards() + "/20"));
-
-        JButton viewBtn = new JButton("View Details");
-        viewBtn.addActionListener(e -> {
-            StringBuilder sb = new StringBuilder();
-            for (Card c : binder.getCards()) {
-                sb.append(c.getName()).append(" | ")
-                  .append(c.getRarity()).append(" | ")
-                  .append(c.getVariant()).append(" | Base: $")
-                  .append(c.getBaseValue()).append("\n");
+            if (Math.abs(valueDifference) >= 1.0) {
+                boolean proceed = BinderViewHelper.confirmUnbalancedTrade(
+                    outgoingCard.getName(),
+                    incomingCard.getName(),
+                    valueDifference
+                );
+                if (!proceed) {
+                    return;
+                }
             }
-            sb.append("\nTotal Value: $").append(binder.getTotalValue());
-            JOptionPane.showMessageDialog(null, sb.toString());
-        });
-        panel.add(viewBtn);
 
-        if (binder.isTradeable()) {
-            JButton tradeBtn = new JButton("Trade");
-            tradeBtn.addActionListener(e -> {
-                JTextField tradeCardName = new JTextField();
-                JComboBox<Rarity> rarityBox = new JComboBox<>(Rarity.values());
-                JComboBox<Variant> variantBox = new JComboBox<>(Variant.values());
-                JTextField baseValueField = new JTextField();
+            binder.addCard(incomingCard);
+            binder.removeCard(outgoingCard);
 
-                JPanel tradePanel = new JPanel(new GridLayout(0, 2));
-                tradePanel.add(new JLabel("New Card Name:")); tradePanel.add(tradeCardName);
-                tradePanel.add(new JLabel("Rarity:")); tradePanel.add(rarityBox);
-                tradePanel.add(new JLabel("Variant:")); tradePanel.add(variantBox);
-                tradePanel.add(new JLabel("Base Value:")); tradePanel.add(baseValueField);
+            gui.refreshAll();
+            BinderViewHelper.showTradeSuccess(outgoingCard.getName(), incomingCard.getName());
 
-                int confirm = JOptionPane.showConfirmDialog(null, tradePanel, "Trade Card", JOptionPane.OK_CANCEL_OPTION);
-                if (confirm == JOptionPane.OK_OPTION) {
-                    try {
-                        Card newCard = new Card(tradeCardName.getText(), (Rarity) rarityBox.getSelectedItem(), (Variant) variantBox.getSelectedItem(), Double.parseDouble(baseValueField.getText()));
-                        double difference = newCard.getTotalValue();
-                        binder.addCard(newCard);
-                        JOptionPane.showMessageDialog(null, "Trade completed. Value of traded card: $" + difference);
-                        gui.updateStatsPanel();
-                        gui.repaint();
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Error during trade: " + ex.getMessage());
-                    }
-                }
-            });
-            panel.add(tradeBtn);
+        } catch (Exception ex) {
+            BinderViewHelper.showErrorDialog("Trade failed: " + ex.getMessage());
         }
+    }
 
-        if (binder.isSellable()) {
-            JButton sellBtn = new JButton("Sell Binder");
-            sellBtn.addActionListener(e -> {
-                double value = binder.getTotalValue();
-                if (binder.getType() == BinderType.RARES || binder.getType() == BinderType.LUXURY)
-                    value *= 0.9;
-
-                int confirm = JOptionPane.showConfirmDialog(null, "Sell for $" + value + "?", "Confirm", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    tcis.sellBinder(binder);
-                    gui.updateMoneyDisplay();
-                    gui.updateStatsPanel();
-                    gui.repaint();
-                }
-            });
-            panel.add(sellBtn);
+    @Override
+    protected double calculateSaleValue(CardContainer container) {
+    	if (!(container instanceof Binder)) {
+            return super.calculateSaleValue(container);
         }
-
-        return panel;
+        
+        Binder binder = (Binder) container;
+        double value = super.calculateSaleValue(binder);
+        
+        // Apply 10% additional fee only for specific binder types
+        if (binder.getType() == BinderType.RARES || binder.getType() == BinderType.LUXURY) {
+            value *= 1.1;
+        }
+        return value;
     }
 }

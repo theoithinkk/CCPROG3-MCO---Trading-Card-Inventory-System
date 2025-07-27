@@ -38,6 +38,14 @@ public class Card {
     
     @Override
     public String toString() {
-        return name + " (" + rarity + ", " + variant + ")";
+        return String.format(
+            "Name: %s | Rarity: %s | Variant: %s | Base Value: $%.2f | Total Value: $%.2f",
+            name,
+            rarity,
+            variant,
+            baseValue,
+            getTotalValue()
+        );
     }
+    
 }

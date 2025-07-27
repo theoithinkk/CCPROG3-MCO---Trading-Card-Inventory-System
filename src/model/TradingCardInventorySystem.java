@@ -5,24 +5,27 @@ import enums.*;
 
 public class TradingCardInventorySystem {
     private Collection collection;
-    private List<Binder> binders;
-    private List<Deck> decks;
+    private List<CardContainer> containers;
     private double money;
     
     public TradingCardInventorySystem() {
         this.collection = new Collection();
-        this.binders = new ArrayList<>();
-        this.decks = new ArrayList<>();
+        this.containers = new ArrayList<>();
         this.money = 0.0;
     }
     
     // Getters
     public Collection getCollection() { return collection; }
-    public List<Binder> getBinders() { return binders; }
-    public List<Deck> getDecks() { return decks; }
+    public List<Deck> getDecks() {
+        return containers.stream().filter(c -> c instanceof Deck).map(c -> (Deck) c).toList();
+    }
+
+    public List<Binder> getBinders() {
+        return containers.stream().filter(c -> c instanceof Binder).map(c -> (Binder) c).toList();
+    }
+    
     public double getMoney() { return money; }
     
-    // Card operations
     public boolean sellCard(Card card) {
         if (collection.getCardCount(card) > 0) {
             collection.removeCard(card);
@@ -31,85 +34,49 @@ public class TradingCardInventorySystem {
         }
         return false;
     }
-    
-    // Binder operations
+   
     public void createBinder(String name, BinderType type) {
-        binders.add(new Binder(name, type));
+        containers.add(new Binder(name, type));
     }
     
-    public void deleteBinder(Binder binder) {
-        // Move all cards back to collection
-        for (Map.Entry<Card, Integer> entry : binder.getCardsWithCounts().entrySet()) {
-            Card card = entry.getKey();
+    public void createDeck(String name, DeckType type) {
+        containers.add(new Deck(name, type));
+    }
+    
+    public void deleteContainer(CardContainer container) {
+        for (Map.Entry<Card, Integer> entry : container.getCardsWithCounts().entrySet()) {
+            Card template = entry.getKey();
             int count = entry.getValue();
+            Card realKey = collection.findMatchingCard(template);
+            if (realKey == null) realKey = template;
             for (int i = 0; i < count; i++) {
-                collection.addCard(card);
+                collection.addCard(realKey);
             }
         }
-        binders.remove(binder);
+        containers.remove(container);
     }
+
     
-    public void moveCardToBinder(Card card, Binder binder) {
-        if (collection.getCardCount(card) > 0 && binder.canAddCard(card)) {
+    public void moveCard(Card card, CardContainer destination) {
+        if (collection.getCardCount(card) > 0 && destination.canAddCard(card)) {
             collection.removeCard(card);
-            binder.addCard(card);
+            destination.addCard(card);
         }
     }
     
-    public void sellBinder(Binder binder) {
-        if (binder.isSellable()) {
-            money += binder.getSellingValue();
-            binders.remove(binder);
+    public void sellContainer(CardContainer container) {
+        if (container.isSellable()) {
+            money += container.getSellingValue();
+            containers.remove(container);
         }
     }
     
     public void tradeCard(Binder binder, Card cardToTrade, Card newCard) {
-        if (binder.isTradeable() && binder.getCardCount(cardToTrade) > 0) {
+        if (binder.isTradeable() && binder.getCardCount(cardToTrade) > 0 && collection.getCardCount(newCard) > 0) {
             binder.removeCard(cardToTrade);
             binder.addCard(newCard);
+            collection.removeCard(newCard);
         }
-    }
-    
-    // Deck operations
-    public void createDeck(String name, DeckType type) {
-        decks.add(new Deck(name, type));
-    }
-    
-    public void deleteDeck(Deck deck) {
-        // Move all cards back to collection
-        for (Map.Entry<Card, Integer> entry : deck.getCardsWithCounts().entrySet()) {
-            Card card = entry.getKey();
-            int count = entry.getValue();
-            for (int i = 0; i < count; i++) {
-                collection.addCard(card);
-            }
-        }
-        decks.remove(deck);
-    }
-    
-    public void moveCardToDeck(Card card, Deck deck) {
-        if (collection.getCardCount(card) > 0 && deck.getUniqueCards() < deck.getCapacity()) {
-            collection.removeCard(card);
-            deck.addCard(card);
-        }
-    }
-    
-    public void sellDeck(Deck deck) {
-        if (deck.isSellable()) {
-            money += deck.getTotalValue();
-            decks.remove(deck);
-        }
-    }
-    
-    public int getTotalCardsCount() {
-        int total = collection.getTotalCards();
-        for (Binder binder : binders) {
-            total += binder.getTotalCards();
-        }
-        for (Deck deck : decks) {
-            total += deck.getTotalCards();
-        }
-        return total;
     }
     
     public void addMoney(double amount) {
@@ -117,21 +84,8 @@ public class TradingCardInventorySystem {
     }
 
     public int getTotalCardCount() {
-        int total = 0;
-
-        // Add all cards in the main collection
-        total += collection.getTotalCards();
-
-        // Add all cards in each binder
-        for (Binder binder : binders) {
-            total += binder.getTotalCards();
-        }
-
-        // Add all cards in each deck
-        for (Deck deck : decks) {
-            total += deck.getTotalCards();
-        }
-
+        int total = collection.getTotalCards();
+        total += containers.stream().mapToInt(CardContainer::getTotalCards).sum();
         return total;
     }
 }

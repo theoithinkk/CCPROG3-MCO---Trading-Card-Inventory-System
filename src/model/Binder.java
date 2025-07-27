@@ -2,7 +2,7 @@ package model;
 
 import enums.*;
 
-public class Binder extends CardContainer {
+public class Binder extends CardContainer implements Sellable, Tradeable{
     private BinderType type;
     private double sellingPrice;
     
