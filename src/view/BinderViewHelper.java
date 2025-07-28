@@ -213,12 +213,17 @@ public class BinderViewHelper extends CardContainerViewHelper {
             if (result != JOptionPane.OK_OPTION) return null;
 
             try {
-                return new Card(
-                    nameField.getText().trim(),
-                    (Rarity) rarityBox.getSelectedItem(),
-                    (Variant) variantBox.getSelectedItem(),
-                    Double.parseDouble(valueField.getText())
-                );
+                Card card = new Card(
+                        nameField.getText().trim(),
+                        (Rarity) rarityBox.getSelectedItem(),
+                        (Variant) variantBox.getSelectedItem(),
+                        Double.parseDouble(valueField.getText())
+                    );
+            	if(!binder.canAddCard(card)) {
+            		throw new IllegalArgumentException("Card does not meet the requirements of the binder.");
+            	}
+            	
+                return card;
             } catch (NumberFormatException e) {
                 showErrorDialog("Invalid value! Must be a number.");
             } catch (IllegalArgumentException e) {
