@@ -1,13 +1,27 @@
+/**
+ * A Swing panel that shows live statistics from the Trading Card Inventory System in a clean and interactive layout.
+ * This panel displays total money, total cards, number of binders, and number of decks,
+ * each inside visually styled cards with rounded corners, accent colors, and hover effects.
+ * It updates dynamically using system data and is designed to give users a quick overview
+ * of their collection at a glance.
+
+ * @version 2.0  
+ * @author Theodore Garcia  
+ * @author Ronin Zerna  
+ */
 package view;
 
 import model.*;
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/**
+ * Panel displaying real-time statistics from the inventory system in card-style boxes.
+ * Includes cards for total money, total cards, total binders, and total decks.
+ */
 public class StatsPanel extends JPanel {
     private JLabel moneyLabel;
     private JLabel totalCardsLabel;
@@ -15,6 +29,11 @@ public class StatsPanel extends JPanel {
     private JLabel deckCountLabel;
     private TradingCardInventorySystem tcis;
 
+    /**
+     * Constructs a {@code StatsPanel} to show summary stats from the given system.
+     *
+     * @param tcis the trading card inventory system instance
+     */
     public StatsPanel(TradingCardInventorySystem tcis) {
         this.tcis = tcis;
         setLayout(new GridLayout(2, 2, 20, 20));
@@ -34,6 +53,14 @@ public class StatsPanel extends JPanel {
         refreshStats();
     }
 
+    /**
+     * Creates a styled card component containing a statistic.
+     *
+     * @param title       the title label to display (e.g. "Total Cards")
+     * @param statLabel   the JLabel to update dynamically with the value
+     * @param accentColor the color accent for the card's theme
+     * @return a styled {@code JPanel} representing the stat card
+     */
     private JPanel createStatCard(String title, JLabel statLabel, Color accentColor) {
         JPanel card = new JPanel();
         card.setLayout(new BorderLayout());
@@ -71,6 +98,9 @@ public class StatsPanel extends JPanel {
         return card;
     }
 
+    /**
+     * Updates the displayed statistics with current data from {@code tcis}.
+     */
     public void refreshStats() {
         moneyLabel.setText("$" + String.format("%.2f", tcis.getMoney()));
         totalCardsLabel.setText(String.valueOf(tcis.getTotalCardCount()));
@@ -79,17 +109,26 @@ public class StatsPanel extends JPanel {
     }
 
     /**
-     * Custom border for rounded corners and accent shadow
+     * Custom border for stat cards with rounded corners and subtle shadows.
      */
     static class RoundedShadowBorder extends AbstractBorder {
         private final Color accent;
         private final int radius;
 
+        /**
+         * Constructs a {@code RoundedShadowBorder} with the given accent color and corner radius.
+         *
+         * @param accent the border color
+         * @param radius the corner radius
+         */
         public RoundedShadowBorder(Color accent, int radius) {
             this.accent = accent;
             this.radius = radius;
         }
 
+        /**
+         * Paints the border with rounded corners and a drop shadow.
+         */
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -106,10 +145,16 @@ public class StatsPanel extends JPanel {
             g2.dispose();
         }
 
+        /**
+         * Returns the insets for this border.
+         */
         public Insets getBorderInsets(Component c) {
             return new Insets(radius, radius, radius, radius);
         }
 
+        /**
+         * Returns the insets for this border with custom input.
+         */
         public Insets getBorderInsets(Component c, Insets insets) {
             insets.set(radius, radius, radius, radius);
             return insets;

@@ -1,3 +1,18 @@
+/**
+ * ContainerController.java
+ *
+ * Abstract base controller for managing card containers such as binders and collections.
+ * Provides shared logic for viewing, adding, removing, and selling cards from containers.
+ * Subclasses may override behavior like pricing logic for specific container types.
+ * 
+ * This controller acts as the foundation for more specific container-based controllers
+ * and enables interaction between the data model and GUI components.
+ * 
+ * @author Theodore Garcia
+ * @author Ronin Zerna
+ * @version 2.0
+ */
+
 package controller;
 
 import model.*;
@@ -10,59 +25,65 @@ import javax.swing.*;
  * Provides common functionality for managing card containers (binders/collections).
  */
 public abstract class ContainerController {
-    // Reference to the main system model
+
+    /** Reference to the main system model. */
     protected final TradingCardInventorySystem tcis;
-    // Reference to the main GUI view
+
+    /** Reference to the main GUI view. */
     protected final TCISGUI gui;
 
     /**
-     * Constructor for ContainerController.
-     * @param tcis The main system model instance
-     * @param gui The main GUI view instance
+     * Constructs a ContainerController with references to the system and GUI.
+     *
+     * @param tcis The main system model instance.
+     * @param gui  The GUI view instance.
      */
     public ContainerController(TradingCardInventorySystem tcis, TCISGUI gui) {
         this.tcis = tcis;
         this.gui = gui;
     }
-    
+
     /**
-     * Handles displaying detailed information about a container.
-     * @param container The container to view
+     * Displays detailed information about a container using a helper view.
+     *
+     * @param container The container to inspect.
      */
     public void handleViewDetails(CardContainer container) {
         CardContainerViewHelper.showContainerDetails(container);
     }
-    
+
     /**
-     * Handles adding a card to a container with validation.
-     * @param container The target container
-     * @param card The card to add
+     * Attempts to add a card to the specified container with validation steps:
+     * <ul>
+     *   <li>Checks if the card exists in the main collection.</li>
+     *   <li>Prevents duplicate entries within the container.</li>
+     *   <li>Validates card compatibility with the container rules.</li>
+     * </ul>
+     * On success, updates the system and GUI, and notifies the user.
+     *
+     * @param container The target container.
+     * @param card      The card to be added.
      */
     public void handleAddCard(CardContainer container, Card card) {
         try {
-            // Validation 1: Verify card exists in main collection
             if (!tcis.getCollection().hasCard(card.getName())) {
                 throw new IllegalArgumentException("Card not found in collection");
             }
 
-            // Validation 2: Prevent duplicate cards in container
             if (container.getCards().contains(card)) {
                 throw new IllegalArgumentException("Card already exists in this binder");
-            }    
-            
-            // Validation 3: Check container-specific restrictions
-            if(!container.canAddCard(card)) {
+            }
+
+            if (!container.canAddCard(card)) {
                 throw new IllegalArgumentException("Card type not allowed.");
             }
 
-            // Transaction: Move card from collection to container
             container.addCard(card);
             tcis.getCollection().removeCard(card);
-            gui.refreshAll(); // Update UI
+            gui.refreshAll();
 
-            // Show success notification
             BinderViewHelper.showInfoDialog(
-                "Card Added", 
+                "Card Added",
                 String.format("Added %s to %s", card, container.getName())
             );
 
@@ -70,63 +91,64 @@ public abstract class ContainerController {
             BinderViewHelper.showErrorDialog(ex.getMessage());
         }
     }
-    
+
     /**
-     * Handles container deletion with confirmation.
-     * @param container The container to delete
+     * Handles deletion of a container from the system, with UI feedback and confirmation dialog.
+     *
+     * @param container The container to delete.
      */
     public void handleDeleteContainer(CardContainer container) {
         try {
-            // Step 1: Remove from data model
             tcis.deleteContainer(container);
-            
-            // Step 2: Refresh UI
             gui.refreshAll();
-            
-            // Step 3: Show confirmation
             BinderViewHelper.showInfoDialog(
-                "Container Deleted", 
+                "Container Deleted",
                 "Successfully deleted " + container.getName()
             );
         } catch (Exception ex) {
             BinderViewHelper.showErrorDialog("Failed to delete container.");
         }
     }
-    
+
     /**
-     * Handles the sale of a container's contents.
-     * @param container The container to sell
+     * Handles the sale process for a container.
+     * Shows a confirmation dialog with the sale value, and proceeds if confirmed.
+     *
+     * @param container The container to sell.
      */
     public void handleSale(CardContainer container) {
-        // Calculate value (potential override in subclasses)
         double value = calculateSaleValue(container);
-        
-        // Confirm sale with user
-        if (JOptionPane.YES_OPTION == 
+
+        if (JOptionPane.YES_OPTION ==
             JOptionPane.showConfirmDialog(
-                null, 
-                "Sell for $" + value + "?", 
-                "Confirm", 
+                null,
+                "Sell for $" + value + "?",
+                "Confirm",
                 JOptionPane.YES_NO_OPTION
             )) {
-            // Process sale if confirmed
             tcis.sellContainer(container);
             gui.refreshAll();
         }
     }
-    
+
     /**
      * Calculates the sale value of a container.
-     * Can be overridden by subclasses for custom pricing logic.
-     * @param container The container to value
-     * @return The calculated sale value
+     * Can be overridden by subclasses for container-specific pricing logic (e.g., bonuses or penalties).
+     *
+     * @param container The container whose value is being calculated.
+     * @return The total sale value.
      */
     protected double calculateSaleValue(CardContainer container) {
-        // Base implementation returns full value
-        // Subclasses may apply discounts or bonuses
         return container.getTotalValue();
     }
-    
+
+    /**
+     * Removes a card from the container and returns it to the main collection.
+     * Refreshes the GUI afterward.
+     *
+     * @param container The container to remove the card from.
+     * @param card      The card to be removed and returned to the collection.
+     */
     public void handleRemoveCard(CardContainer container, Card card) {
         container.removeCard(card);
         tcis.getCollection().addCard(card);

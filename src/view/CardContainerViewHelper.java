@@ -1,3 +1,15 @@
+/**
+ * Abstract helper class for creating and managing UI components 
+ * related to CardContainer objects such as Binders and Decks.
+ * Provides shared methods for dialog prompts, confirmations, 
+ * styled buttons, and displaying container details.
+ *
+ * @author Theodore Garcia
+ * @author Ronin Zerna
+ * @version 2.0
+ */
+
+
 package view;
 import model.*;
 import controller.*;
@@ -62,6 +74,14 @@ public abstract class CardContainerViewHelper {
         }
     }
     
+    /**
+     * Opens a dialog to select a card for removal from the given container.
+     * Only cards with a count greater than 0 are shown.
+     *
+     * @param container The card container to select from
+     * @return The selected card to remove, or null if the dialog was cancelled or no cards are available
+     */
+
     protected static Card selectCardToRemove(CardContainer container) {
         List<Card> available = container.getCards().stream()
             .filter(c -> container.getCardCount(c) > 0)
@@ -99,14 +119,28 @@ public abstract class CardContainerViewHelper {
         int i = 1;
         // Format each card's information
         for (Card c : container.getCards()) {
-            sb.append(String.format("[%d]. Name : %s | Rarity: %s | Variant: %s | Base: $%.2f\n", i, c.getName(), c.getRarity(), c.getVariant(), c.getBaseValue()));
+            sb.append(String.format("[%d]. Name : %s | Rarity: %s | Variant: %s | Base: $%.2f\n", 
+            						i, c.getName(), c.getRarity(), c.getVariant(), c.getBaseValue()));
             i++;
         }
         // Append total value at bottom
         sb.append("\nTotal Value: $").append(container.getTotalValue());
+        if (container instanceof Binder binder && binder.isSellable()) {
+            sb.append(String.format("\nSell Price: $%.2f", binder.getSellingValue()));
+        } else if (container instanceof Deck deck && deck.isSellable()) {
+            sb.append(String.format("\nSell Price: $%.2f", deck.getTotalValue()));
+        }
         JOptionPane.showMessageDialog(null, sb.toString());
     }
     
+    /**
+     * Adds a consistently styled button to the specified panel.
+     * This version features custom font, padding, borders, and spacing.
+     * 
+     * @param panel The panel to add the styled button to
+     * @param text The label to display on the button
+     * @param listener The action to perform when the button is clicked
+     */
     public void addStyledButton(JPanel panel, String text, ActionListener listener) {
 	    JButton btn = new JButton(text);
 	    btn.addActionListener(listener);

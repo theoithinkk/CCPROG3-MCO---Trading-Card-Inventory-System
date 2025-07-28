@@ -4,6 +4,6 @@
 /**
  * 
  */
-module MCO2PROTOTYPE {
+module MCO2GARCIAZERNA {
 	requires java.desktop;
 }
