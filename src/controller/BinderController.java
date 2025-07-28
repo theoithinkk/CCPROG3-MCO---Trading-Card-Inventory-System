@@ -44,7 +44,7 @@ public class BinderController extends ContainerController {
         Card outgoingCard = BinderViewHelper.selectOutgoingCard(binder);
         if (outgoingCard == null) return;
 
-        Card incomingCard = BinderViewHelper.createIncomingCardDialog();
+        Card incomingCard = BinderViewHelper.createIncomingCardDialog(binder);
         if (incomingCard == null) return;
 
         try {
