@@ -196,7 +196,7 @@ public class BinderViewHelper extends CardContainerViewHelper {
      *
      * @return A new Card object if created successfully, or null if cancelled.
      */
-    public static Card createIncomingCardDialog() {
+    public static Card createIncomingCardDialog(Binder binder) {
         JTextField nameField = new JTextField();
         JComboBox<Rarity> rarityBox = new JComboBox<>(Rarity.values());
         JComboBox<Variant> variantBox = new JComboBox<>(Variant.values());
