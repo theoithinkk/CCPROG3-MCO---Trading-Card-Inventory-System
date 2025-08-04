@@ -78,8 +78,10 @@ public abstract class ContainerController {
                 throw new IllegalArgumentException("Card type not allowed.");
             }
 
-            if(tcis.getCollection().
-
+            if(tcis.getCollection().getCardCount(card) == 0){
+                 throw new IllegalArgumentException("Card count is zero.");
+            }
+            
             container.addCard(card);
             tcis.getCollection().removeCard(card);
             gui.refreshAll();
@@ -152,9 +154,10 @@ public abstract class ContainerController {
      * @param card      The card to be removed and returned to the collection.
      */
     public void handleRemoveCard(CardContainer container, Card card) {
-        container.removeCard(card);
+        container.remove(card);
         tcis.getCollection().addCard(card);
         gui.refreshAll();
     }
 }
+
 
