@@ -95,6 +95,9 @@ public abstract class CardContainer {
         }
     }
 
+    public void remove(Card card) {
+        cards.remove(card);
+    }
     /**
      * Checks if the container has a card by name.
      *
@@ -206,3 +209,4 @@ public abstract class CardContainer {
      */
     protected abstract double getSellingValue();
 }
+
