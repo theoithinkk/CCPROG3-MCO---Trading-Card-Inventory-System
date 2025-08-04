@@ -78,6 +78,8 @@ public abstract class ContainerController {
                 throw new IllegalArgumentException("Card type not allowed.");
             }
 
+            if(tcis.getCollection().
+
             container.addCard(card);
             tcis.getCollection().removeCard(card);
             gui.refreshAll();
@@ -155,3 +157,4 @@ public abstract class ContainerController {
         gui.refreshAll();
     }
 }
+
